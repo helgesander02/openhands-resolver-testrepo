@@ -1,0 +1,6 @@
+tk
+customtkinter
+pandas
+Pillow
+tkcalendar
+SQLAlchemy
