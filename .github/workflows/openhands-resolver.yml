@@ -424,3 +424,44 @@ jobs:
               repo: context.repo.repo,
               body: `The workflow to fix this issue encountered an error. Please check the [workflow logs](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}) for more information.`
             });
+
+      - name: Comment on issue with final thought
+        uses: actions/github-script@v7
+        if: always()
+        env:
+          ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
+        with:
+          github-token: ${{ secrets.PAT_TOKEN || github.token }}
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const issueNumber = process.env.ISSUE_NUMBER;
+            let finalThought = '';
+
+            try {
+              const outputFilePath = path.resolve('/tmp/output/output.jsonl');
+              if (fs.existsSync(outputFilePath)) {
+                const outputContent = fs.readFileSync(outputFilePath, 'utf8');
+                const jsonLines = outputContent.split('\n').filter(line => line.trim() !== '');
+                if (jsonLines.length > 0) {
+                  const lastEntry = JSON.parse(jsonLines[jsonLines.length - 1]);
+                  if (lastEntry.history && Array.isArray(lastEntry.history) && lastEntry.history.length > 0) {
+                    const lastHistoryEntry = lastEntry.history[lastEntry.history.length - 1];
+                    finalThought = lastHistoryEntry.final_thought || '';
+                  }
+                }
+              }
+            } catch (error) {
+              console.error('Error reading final_thought from output.jsonl:', error);
+            }
+
+            const commentBody = finalThought
+              ? `**Agent's Final Thought:**\n> ${finalThought}`
+              : `No final thought was captured. Please review the logs for more details.`;
+
+            github.rest.issues.createComment({
+              issue_number: issueNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
