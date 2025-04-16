@@ -72,15 +72,17 @@ class input_order(customtkinter.CTkFrame):
             spinbox_1.grid(row=i,column=4,pady=0)
             buy_button=customtkinter.CTkButton(self.a_frame,image=self.buy_photo,hover=False,fg_color = ("#DDDDDD"), text="",command=gen_cmd(prodcuts[i].product_Name,[spinbox_1,prodcuts[i].product_Price]))
             buy_button.grid(row=i,column=5, padx=30, pady=0)
-        self.sum_frame_Fake=customtkinter.CTkFrame(self)
-        self.sum_frame_Fake.pack(anchor='n',side='right',fill='both')
-        self.sum_frame_=sum_Frame(self.sum_frame_Fake,a='',buy_list=self.buy_list,bt_group=self.bt_group,  fg_color = ("#EEEEEE"),width=400)
+        # Create a container frame for the sum frame with fixed width
+        self.sum_frame_container = customtkinter.CTkFrame(self, width=400, fg_color="transparent")
+        self.sum_frame_container.pack(side='right', fill='y')
+        self.sum_frame_container.pack_propagate(False)  # Prevent container from shrinking
+
+        # Create the sum frame inside the container
+        self.sum_frame_ = sum_Frame(self.sum_frame_container, a='', buy_list=self.buy_list,
+                                  bt_group=self.bt_group, fg_color=("#EEEEEE"))
         self.sum_frame_.reset_bt.configure(command=self.reset_)
         self.sum_frame_.confirm_bt.configure(command=self.add_od)
-        self.sum_frame_.pack_propagate(0)
-        # title.pack(anchor='w',side='top',fill='both')
-
-        self.sum_frame_.pack(anchor='n',side='right',fill='both')  
+        self.sum_frame_.pack(fill='both', expand=True)
 
         self.input_top_.pack(anchor='w',padx=30,pady=5)    
         self.a_frame.pack(fill='both',anchor='n',expand=1)
@@ -165,13 +167,20 @@ class input_order(customtkinter.CTkFrame):
         self.buy_list=self.sum_frame_.buy_list
         self.bt_group=self.sum_frame_.bt_group       
     def reset_(self):
-        self.buy_list={}
-        self.sum_frame_.pack_forget()
-        self.sum_frame_.destroy()
-        self.sum_frame_=sum_Frame(self.sum_frame_Fake,a='',buy_list=self.buy_list,bt_group=self.bt_group,  fg_color = ("#EEEEEE"),width=400)
+        """Reset the buy list and recreate the sum frame."""
+        self.buy_list = {}
+
+        # Remove old sum frame
+        if hasattr(self, 'sum_frame_'):
+            self.sum_frame_.destroy()
+
+        # Create new sum frame
+        self.sum_frame_ = sum_Frame(self.sum_frame_container, a='',
+                                  buy_list=self.buy_list,
+                                  bt_group=self.bt_group,
+                                  fg_color=("#EEEEEE"))
         self.sum_frame_.reset_bt.configure(command=self.reset_)
         self.sum_frame_.confirm_bt.configure(command=self.add_od)
-        self.sum_frame_.pack_propagate(0)
-        self.sum_frame_.pack(anchor='n',side='right',fill='both')
+        self.sum_frame_.pack(fill='both', expand=True)
         
 
